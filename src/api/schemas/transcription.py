@@ -1,0 +1,12 @@
+from pydantic import BaseModel
+from typing import Optional
+
+
+class TranscriptionResponse(BaseModel):
+    id: Optional[int] = None
+    filename: str
+    language: str
+    transcription: str
+    model_used: Optional[str] = "whisper-large-v3"
+    file_size: Optional[str] = None
+    created_at: Optional[str] = None

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Transcriptosense</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+</head>
+<body>
+  <!-- Animated background -->
+  <div class="bg-animation">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="orb orb-4"></div>
+    <div class="particles" id="particles"></div>
+  </div>
+
+  <!-- Main app -->
+  <div class="app">
+
+    <!-- Header -->
+    <header class="header">
+      <div class="logo">
+        <div class="logo-icon">
+          <i class="fas fa-waveform-lines"></i>
+          <div class="logo-pulse"></div>
+        </div>
+        <span class="logo-text">Transcriptosense</span>
+      </div>
+      <div class="header-badge">AI Powered</div>
+    </header>
+
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-tag">
+        <span class="dot"></span>
+        Whisper Large v3
+      </div>
+      <h1 class="hero-title">
+        Turn <span class="gradient-text">Audio</span> into
+        <span class="gradient-text">Text</span>
+      </h1>
+      <p class="hero-subtitle">
+        Upload an audio file or record directly from your microphone.<br />
+        Powered by OpenAI Whisper for accurate multilingual transcription.
+      </p>
+    </section>
+
+    <!-- Main card -->
+    <main class="main-card">
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab active" id="tabUpload" onclick="switchTab('upload')">
+          <i class="fas fa-upload"></i> Upload File
+        </button>
+        <button class="tab" id="tabRecord" onclick="switchTab('record')">
+          <i class="fas fa-microphone"></i> Record Audio
+        </button>
+      </div>
+
+      <!-- Upload panel -->
+      <div class="panel" id="panelUpload">
+        <div class="drop-zone" id="dropZone">
+          <div class="drop-icon">
+            <i class="fas fa-cloud-upload-alt"></i>
+          </div>
+          <p class="drop-title">Drag & drop your audio file here</p>
+          <p class="drop-sub">or click to browse</p>
+          <p class="drop-formats">WAV · MP3 · M4A · FLAC · OGG</p>
+          <input type="file" id="audioFile" accept=".wav,.mp3,.m4a,.flac,.ogg" hidden />
+        </div>
+
+        <div class="file-preview hidden" id="filePreview">
+          <div class="file-info">
+            <div class="file-icon"><i class="fas fa-file-audio"></i></div>
+            <div class="file-details">
+              <span class="file-name" id="fileName"></span>
+              <span class="file-size" id="fileSize"></span>
+            </div>
+            <button class="file-remove" onclick="clearFile()">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <audio id="audioPlayer" controls class="audio-player"></audio>
+        </div>
+      </div>
+
+      <!-- Record panel -->
+      <div class="panel hidden" id="panelRecord">
+        <div class="recorder">
+          <div class="visualizer-container">
+            <canvas id="visualizer" width="600" height="120"></canvas>
+            <div class="visualizer-overlay" id="vizOverlay">
+              <i class="fas fa-microphone-slash"></i>
+              <span>Click record to start</span>
+            </div>
+          </div>
+
+          <div class="recorder-controls">
+            <div class="record-timer" id="recordTimer">00:00</div>
+
+            <div class="record-buttons">
+              <button class="btn-record" id="btnRecord" onclick="toggleRecord()">
+                <div class="record-icon">
+                  <span class="rec-dot"></span>
+                </div>
+                <span id="recordLabel">Record</span>
+              </button>
+
+              <button class="btn-stop hidden" id="btnStop" onclick="stopRecord()">
+                <i class="fas fa-stop"></i>
+                <span>Stop</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="recording-preview hidden" id="recordingPreview">
+            <audio id="recordedAudio" controls class="audio-player"></audio>
+            <button class="btn-clear-rec" onclick="clearRecording()">
+              <i class="fas fa-trash"></i> Discard
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Transcribe button -->
+      <button class="btn-transcribe" id="btnTranscribe" onclick="transcribe()">
+        <span class="btn-text">
+          <i class="fas fa-magic"></i> Transcribe Now
+        </span>
+        <div class="btn-shine"></div>
+      </button>
+
+      <!-- Progress -->
+      <div class="progress-section hidden" id="progressSection">
+        <div class="progress-bar-wrap">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="progress-steps">
+          <div class="step active" id="step1">
+            <div class="step-icon"><i class="fas fa-upload"></i></div>
+            <span>Uploading</span>
+          </div>
+          <div class="step-line"></div>
+          <div class="step" id="step2">
+            <div class="step-icon"><i class="fas fa-brain"></i></div>
+            <span>Processing</span>
+          </div>
+          <div class="step-line"></div>
+          <div class="step" id="step3">
+            <div class="step-icon"><i class="fas fa-check"></i></div>
+            <span>Done</span>
+          </div>
+        </div>
+        <p class="progress-label" id="progressLabel">Uploading audio file...</p>
+      </div>
+
+      <!-- Error -->
+      <div class="error-box hidden" id="errorBox">
+        <i class="fas fa-exclamation-triangle"></i>
+        <span id="errorMsg"></span>
+      </div>
+
+    </main>
+
+    <!-- Result section -->
+    <section class="result-section hidden" id="resultSection">
+      <div class="result-header">
+        <div class="result-title">
+          <i class="fas fa-file-lines"></i>
+          Transcription Result
+        </div>
+        <div class="result-meta">
+          <span class="meta-badge">
+            <i class="fas fa-globe"></i>
+            <span id="langResult"></span>
+          </span>
+          <span class="meta-badge">
+            <i class="fas fa-file-audio"></i>
+            <span id="fileResult"></span>
+          </span>
+        </div>
+      </div>
+
+      <div class="result-body">
+        <textarea id="transcriptionText" class="transcription-area" readonly
+          placeholder="Your transcription will appear here..."></textarea>
+      </div>
+
+      <div class="result-actions">
+        <button class="action-btn" onclick="copyText()">
+          <i class="fas fa-copy"></i> Copy
+        </button>
+        <button class="action-btn" onclick="downloadTxt()">
+          <i class="fas fa-download"></i> Download .txt
+        </button>
+        <button class="action-btn btn-new" onclick="resetAll()">
+          <i class="fas fa-plus"></i> New Transcription
+        </button>
+      </div>
+    </section>
+
+    <footer class="footer">
+      Transcriptosense &copy; 2026 — Powered by OpenAI Whisper Large v3
+    </footer>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

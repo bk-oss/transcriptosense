@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="TranscriptoSense — AI-powered multilingual audio transcription supporting French, Arabic, and Tunisian Dialect." />
+  <title>TranscriptoSense — AI Audio Transcription</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- Animated background -->
+  <div class="bg-animation">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="orb orb-4"></div>
+    <div class="particles" id="particles"></div>
+  </div>
+
+  <div class="app">
+
+    <!-- ── Header ─────────────────────────────────────────────── -->
+    <header class="header">
+      <div class="logo">
+        <div class="logo-icon">
+          <i class="fas fa-waveform-lines"></i>
+          <div class="logo-pulse"></div>
+        </div>
+        <span class="logo-text">TranscriptoSense</span>
+      </div>
+
+      <nav class="page-nav" role="navigation" aria-label="Main navigation">
+        <button class="page-nav-btn active" id="navTranscribe" onclick="switchPage('transcribe')" aria-current="page">
+          <i class="fas fa-magic"></i> Transcribe
+        </button>
+        <button class="page-nav-btn" id="navHistory" onclick="switchPage('history')">
+          <i class="fas fa-history"></i> History
+          <span class="nav-badge" id="historyBadge">0</span>
+        </button>
+      </nav>
+
+      <div class="header-badge">AI Powered</div>
+    </header>
+
+    <!-- ════════════════════════════════════════════════════════ -->
+    <!--  PAGE — TRANSCRIBE                                      -->
+    <!-- ════════════════════════════════════════════════════════ -->
+    <div id="pageTrans">
+
+      <!-- Hero -->
+      <section class="hero">
+        <div class="hero-tag">
+          <span class="dot"></span>
+          Whisper Large v3 · Fine-tuned for Tunisian Dialect
+        </div>
+        <h1 class="hero-title">
+          Turn <span class="gradient-text">Audio</span> into
+          <span class="gradient-text">Intelligence</span>
+        </h1>
+        <p class="hero-subtitle">
+          Upload or record audio in French, Arabic, or Tunisian Darija.<br />
+          Get an instant transcript powered by state-of-the-art AI.
+        </p>
+
+        <!-- Live stats strip -->
+        <div class="stats-strip">
+          <div class="stat-pill" id="pillTotal">
+            <i class="fas fa-file-audio"></i>
+            <span id="statTotal">—</span> transcriptions
+          </div>
+          <div class="stat-pill">
+            <i class="fas fa-globe"></i>
+            FR · AR · TN Darija
+          </div>
+          <div class="stat-pill">
+            <i class="fas fa-robot"></i>
+            whisper-large-v3
+          </div>
+        </div>
+      </section>
+
+      <!-- Main card -->
+      <main class="main-card" role="main">
+
+        <!-- Inner tabs: Upload / Record -->
+        <div class="tabs" role="tablist">
+          <button class="tab active" id="tabUpload" role="tab" aria-selected="true" onclick="switchTab('upload')">
+            <i class="fas fa-upload"></i> Upload File
+          </button>
+          <button class="tab" id="tabRecord" role="tab" aria-selected="false" onclick="switchTab('record')">
+            <i class="fas fa-microphone"></i> Record Audio
+          </button>
+        </div>
+
+        <!-- Upload panel -->
+        <div class="panel" id="panelUpload" role="tabpanel">
+          <div class="drop-zone" id="dropZone">
+            <div class="drop-icon">
+              <i class="fas fa-cloud-upload-alt"></i>
+            </div>
+            <p class="drop-title">Drag &amp; drop your audio file here</p>
+            <p class="drop-sub">or click to browse</p>
+            <p class="drop-formats">WAV · MP3 · M4A · FLAC · OGG</p>
+            <input type="file" id="audioFile" accept=".wav,.mp3,.m4a,.flac,.ogg" hidden />
+          </div>
+
+          <div class="file-preview hidden" id="filePreview">
+            <div class="file-info">
+              <div class="file-icon"><i class="fas fa-file-audio"></i></div>
+              <div class="file-details">
+                <span class="file-name" id="fileName"></span>
+                <span class="file-size" id="fileSize"></span>
+              </div>
+              <button class="file-remove" onclick="clearFile()" aria-label="Remove file">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            <audio id="audioPlayer" controls class="audio-player"></audio>
+          </div>
+        </div>
+
+        <!-- Record panel -->
+        <div class="panel hidden" id="panelRecord" role="tabpanel">
+          <div class="recorder">
+            <div class="visualizer-container">
+              <canvas id="visualizer" width="600" height="120" aria-label="Audio visualizer"></canvas>
+              <div class="visualizer-overlay" id="vizOverlay">
+                <i class="fas fa-microphone-slash"></i>
+                <span>Click record to start</span>
+              </div>
+            </div>
+
+            <div class="recorder-controls">
+              <div class="record-timer" id="recordTimer" aria-live="polite">00:00</div>
+              <div class="record-buttons">
+                <button class="btn-record" id="btnRecord" onclick="toggleRecord()">
+                  <div class="record-icon"><span class="rec-dot"></span></div>
+                  <span id="recordLabel">Record</span>
+                </button>
+                <button class="btn-stop hidden" id="btnStop" onclick="stopRecord()">
+                  <i class="fas fa-stop"></i> <span>Stop</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="recording-preview hidden" id="recordingPreview">
+              <audio id="recordedAudio" controls class="audio-player"></audio>
+              <button class="btn-clear-rec" onclick="clearRecording()">
+                <i class="fas fa-trash"></i> Discard
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Language selector -->
+        <div class="lang-selector">
+          <span class="lang-label">
+            <i class="fas fa-language"></i> Language
+          </span>
+          <div class="lang-options" role="group" aria-label="Language selection">
+            <button class="lang-btn active" data-lang="" id="langAuto" onclick="selectLang(this)">
+              🔍 Auto-detect
+            </button>
+            <button class="lang-btn" data-lang="fr" id="langFr" onclick="selectLang(this)">
+              🇫🇷 French
+            </button>
+            <button class="lang-btn" data-lang="ar" id="langAr" onclick="selectLang(this)">
+              🇹🇳 Arabic / Tunisian
+            </button>
+          </div>
+        </div>
+
+        <!-- Transcribe button -->
+        <button class="btn-transcribe" id="btnTranscribe" onclick="transcribe()">
+          <span class="btn-text">
+            <i class="fas fa-magic"></i> Transcribe Now
+          </span>
+          <div class="btn-shine"></div>
+        </button>
+
+        <!-- Progress -->
+        <div class="progress-section hidden" id="progressSection" aria-live="polite">
+          <div class="progress-bar-wrap">
+            <div class="progress-bar" id="progressBar"></div>
+          </div>
+          <div class="progress-steps">
+            <div class="step active" id="step1">
+              <div class="step-icon"><i class="fas fa-upload"></i></div>
+              <span>Uploading</span>
+            </div>
+            <div class="step-line"></div>
+            <div class="step" id="step2">
+              <div class="step-icon"><i class="fas fa-brain"></i></div>
+              <span>Processing</span>
+            </div>
+            <div class="step-line"></div>
+            <div class="step" id="step3">
+              <div class="step-icon"><i class="fas fa-check"></i></div>
+              <span>Done</span>
+            </div>
+          </div>
+          <p class="progress-label" id="progressLabel">Uploading audio file...</p>
+        </div>
+
+        <!-- Error -->
+        <div class="error-box hidden" id="errorBox" role="alert">
+          <i class="fas fa-exclamation-triangle"></i>
+          <span id="errorMsg"></span>
+        </div>
+
+      </main>
+
+      <!-- Result section -->
+      <section class="result-section hidden" id="resultSection" aria-live="polite">
+
+        <div class="result-header">
+          <div class="result-title">
+            <i class="fas fa-file-lines"></i>
+            Transcription Result
+          </div>
+          <div class="result-meta">
+            <span class="meta-badge" id="badgeFile">
+              <i class="fas fa-file-audio"></i>
+              <span id="fileResult"></span>
+            </span>
+          </div>
+        </div>
+
+        <!-- Stats cards -->
+        <div class="result-stats-grid">
+          <div class="stat-card">
+            <div class="stat-card-icon lang-icon"><i class="fas fa-globe"></i></div>
+            <div class="stat-card-body">
+              <div class="stat-card-val" id="scLang">—</div>
+              <div class="stat-card-lbl">Language</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-icon"><i class="fas fa-book-open"></i></div>
+            <div class="stat-card-body">
+              <div class="stat-card-val" id="scWords">—</div>
+              <div class="stat-card-lbl">Words</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-icon"><i class="fas fa-font"></i></div>
+            <div class="stat-card-body">
+              <div class="stat-card-val" id="scChars">—</div>
+              <div class="stat-card-lbl">Characters</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-icon"><i class="fas fa-clock"></i></div>
+            <div class="stat-card-body">
+              <div class="stat-card-val" id="scDur">—</div>
+              <div class="stat-card-lbl">Duration</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-icon"><i class="fas fa-weight-hanging"></i></div>
+            <div class="stat-card-body">
+              <div class="stat-card-val" id="scSize">—</div>
+              <div class="stat-card-lbl">File Size</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="result-body">
+          <textarea id="transcriptionText" class="transcription-area" readonly
+            placeholder="Your transcription will appear here..."></textarea>
+        </div>
+
+        <!-- Export actions -->
+        <div class="result-actions">
+          <button class="action-btn" onclick="copyText()" id="btnCopy">
+            <i class="fas fa-copy"></i> Copy
+          </button>
+          <button class="action-btn action-txt" onclick="exportTXT()">
+            <i class="fas fa-file-alt"></i> .TXT
+          </button>
+          <button class="action-btn action-json" onclick="exportJSON()">
+            <i class="fas fa-code"></i> .JSON
+          </button>
+          <button class="action-btn action-pdf" onclick="exportPDF()">
+            <i class="fas fa-file-pdf"></i> .PDF
+          </button>
+          <button class="action-btn btn-new" onclick="resetAll()">
+            <i class="fas fa-plus"></i> New
+          </button>
+        </div>
+      </section>
+
+    </div><!-- /pageTrans -->
+
+    <!-- ════════════════════════════════════════════════════════ -->
+    <!--  PAGE — HISTORY                                         -->
+    <!-- ════════════════════════════════════════════════════════ -->
+    <div id="pageHistory" class="hidden">
+
+      <section class="hero" style="margin-bottom:28px">
+        <div class="hero-tag">
+          <span class="dot"></span>
+          SQLite · Local database
+        </div>
+        <h2 class="hero-title" style="font-size:clamp(26px,4vw,46px)">
+          Transcription <span class="gradient-text">History</span>
+        </h2>
+        <p class="hero-subtitle">
+          Browse, search, re-export, and manage all your past transcriptions.
+        </p>
+      </section>
+
+      <!-- Controls bar -->
+      <div class="history-controls">
+        <div class="history-search-wrap">
+          <i class="fas fa-search hist-search-icon"></i>
+          <input type="search" id="historySearch" class="history-search"
+            placeholder="Search filenames or transcript text…"
+            oninput="onSearchInput(this.value)"
+            aria-label="Search history" />
+          <button class="btn-clear-search hidden" id="btnClearSearch"
+            onclick="clearSearch()" aria-label="Clear search">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="history-ctrl-right">
+          <button class="btn-refresh" onclick="loadHistory()" title="Refresh">
+            <i class="fas fa-sync-alt"></i>
+          </button>
+          <button class="btn-danger" onclick="clearAllHistory()" id="btnClearAll">
+            <i class="fas fa-trash-alt"></i> Clear All
+          </button>
+        </div>
+      </div>
+
+      <!-- Count label -->
+      <div class="history-count-label" id="historyCountLabel"></div>
+
+      <!-- History list -->
+      <div id="historyList" class="history-list" aria-live="polite">
+        <!-- Injected by JS -->
+      </div>
+
+      <!-- Empty state -->
+      <div class="history-empty hidden" id="historyEmpty">
+        <div class="history-empty-icon"><i class="fas fa-inbox"></i></div>
+        <p class="history-empty-title">No transcriptions yet</p>
+        <p class="history-empty-sub">Upload or record audio and transcribe it to see results here.</p>
+        <button class="btn-go-trans" onclick="switchPage('transcribe')">
+          <i class="fas fa-magic"></i> Start Transcribing
+        </button>
+      </div>
+
+    </div><!-- /pageHistory -->
+
+    <footer class="footer">
+      TranscriptoSense &copy; 2026 &mdash; Powered by OpenAI Whisper Large v3 &middot; Fine-tuned for Tunisian Dialect Research
+    </footer>
+
+  </div><!-- /app -->
+
+  <!-- jsPDF CDN for client-side PDF export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

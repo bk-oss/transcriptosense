@@ -1,0 +1,11 @@
+{
+  "audio_file": "C:\\Users\\mbaklouti1\\Desktop\\transcriptosense\\data\\interim\\sample_16k_mono.wav",
+  "segments": [
+    {
+      "speaker_raw": "SPEAKER_00",
+      "speaker": "Speaker 1",
+      "start": 0.031,
+      "end": 13.497
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
+
+from src.api.routes.transcription import router as transcription_router
+from src.api.routes.history import router as history_router
+from src.api.services.database import init_db
+
+app = FastAPI(
+    title="Transcriptosense API",
+    version="2.0.0",
+    description="Backend API for multilingual audio transcription with history",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+@app.on_event("startup")
+def startup():
+    init_db()
+
+
+# ── API routes ────────────────────────────────────────────────────────────────
+app.include_router(transcription_router, prefix="/api")
+app.include_router(history_router, prefix="/api")
+
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok", "version": "2.0.0"}
+
+
+# ── Serve the frontend (must be LAST so API routes take priority) ─────────────
+_UI_DIR = Path(__file__).resolve().parent.parent / "ui"
+if _UI_DIR.exists():
+    app.mount("/", StaticFiles(directory=str(_UI_DIR), html=True), name="ui")

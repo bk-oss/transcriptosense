@@ -337,7 +337,42 @@ function showResult(data) {
   // Show section
   const section = document.getElementById("resultSection");
   section.classList.remove("hidden");
-  section.scrollIntoView({ behavior: "smooth", block: "start" });
+  section.classList.remove("animate-result");
+  void section.offsetWidth;
+  section.classList.add("animate-result");
+
+  const cards = section.querySelectorAll(".stat-card");
+  cards.forEach((card, index) => {
+    card.classList.remove("pop-in");
+    card.style.animationDelay = `${index * 70}ms`;
+    card.classList.add("pop-in");
+  });
+
+  const txArea = document.getElementById("transcriptionText");
+  txArea.classList.remove("pop-in");
+  void txArea.offsetWidth;
+  txArea.classList.add("pop-in");
+
+  const header = section.querySelector(".result-header");
+  if (header) {
+    header.classList.remove("pop-in");
+    void header.offsetWidth;
+    header.classList.add("pop-in");
+  }
+
+  const statsGrid = section.querySelector(".result-stats-grid");
+  if (statsGrid) {
+    statsGrid.classList.remove("pop-in");
+    void statsGrid.offsetWidth;
+    statsGrid.classList.add("pop-in");
+  }
+
+  requestAnimationFrame(() => {
+    section.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+
+  // Refresh Ollama status after results are displayed.
+  checkOllamaStatus();
 }
 
 // ── Copy ─────────────────────────────────────────────────────

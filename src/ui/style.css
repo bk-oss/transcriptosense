@@ -746,6 +746,27 @@ body {
   flex-wrap: wrap;
   gap: 16px;
   margin-bottom: 24px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  opacity: 0;
+  transform: translateY(14px);
+}
+
+.result-header.pop-in {
+  animation: cardPop 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.result-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+  margin-bottom: 28px;
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.result-stats-grid.pop-in {
+  animation: cardPop 0.42s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .result-title {

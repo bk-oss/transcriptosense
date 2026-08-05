@@ -3,15 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="TranscriptoSense — AI-powered multilingual audio transcription supporting French, Arabic, and Tunisian Dialect." />
   <title>TranscriptoSense — AI Audio Transcription</title>
   <link rel="stylesheet" href="style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
 </head>
 <body>
 
-  <!-- Animated background -->
   <div class="bg-animation">
     <div class="orb orb-1"></div>
     <div class="orb orb-2"></div>
@@ -22,7 +20,7 @@
 
   <div class="app">
 
-    <!-- ── Header ─────────────────────────────────────────────── -->
+    <!-- ── Header ── -->
     <header class="header">
       <div class="logo">
         <div class="logo-icon">
@@ -31,18 +29,20 @@
         </div>
         <span class="logo-text">TranscriptoSense</span>
       </div>
-
-      <nav class="page-nav" role="navigation" aria-label="Main navigation">
-        <button class="page-nav-btn active" id="navTranscribe" onclick="switchPage('transcribe')" aria-current="page">
+      <nav class="page-nav">
+        <button class="page-nav-btn active" id="navTranscribe"
+          onclick="switchPage('transcribe')">
           <i class="fas fa-magic"></i> Transcribe
         </button>
-        <button class="page-nav-btn" id="navHistory" onclick="switchPage('history')">
+        <button class="page-nav-btn" id="navHistory"
+          onclick="switchPage('history')">
           <i class="fas fa-history"></i> History
           <span class="nav-badge" id="historyBadge">0</span>
         </button>
       </nav>
-
-      <div class="header-badge">AI Powered</div>
+      <div class="header-badge">
+        <span class="dot"></span> AI Powered
+      </div>
     </header>
 
     <!-- ════════════════════════════════════════════════════════ -->
@@ -50,7 +50,6 @@
     <!-- ════════════════════════════════════════════════════════ -->
     <div id="pageTrans">
 
-      <!-- Hero -->
       <section class="hero">
         <div class="hero-tag">
           <span class="dot"></span>
@@ -64,39 +63,36 @@
           Upload or record audio in French, Arabic, or Tunisian Darija.<br />
           Get an instant transcript powered by state-of-the-art AI.
         </p>
-
-        <!-- Live stats strip -->
         <div class="stats-strip">
-          <div class="stat-pill" id="pillTotal">
+          <div class="stat-pill">
             <i class="fas fa-file-audio"></i>
             <span id="statTotal">—</span> transcriptions
           </div>
           <div class="stat-pill">
-            <i class="fas fa-globe"></i>
-            FR · AR · TN Darija
+            <i class="fas fa-globe"></i> FR · AR · TN Darija
           </div>
           <div class="stat-pill">
-            <i class="fas fa-robot"></i>
-            whisper-large-v3
+            <i class="fas fa-robot"></i> whisper-large-v3
           </div>
         </div>
       </section>
 
       <!-- Main card -->
-      <main class="main-card" role="main">
+      <main class="main-card">
 
-        <!-- Inner tabs: Upload / Record -->
-        <div class="tabs" role="tablist">
-          <button class="tab active" id="tabUpload" role="tab" aria-selected="true" onclick="switchTab('upload')">
+        <div class="tabs">
+          <button class="tab active" id="tabUpload"
+            onclick="switchTab('upload')">
             <i class="fas fa-upload"></i> Upload File
           </button>
-          <button class="tab" id="tabRecord" role="tab" aria-selected="false" onclick="switchTab('record')">
+          <button class="tab" id="tabRecord"
+            onclick="switchTab('record')">
             <i class="fas fa-microphone"></i> Record Audio
           </button>
         </div>
 
         <!-- Upload panel -->
-        <div class="panel" id="panelUpload" role="tabpanel">
+        <div class="panel" id="panelUpload">
           <div class="drop-zone" id="dropZone">
             <div class="drop-icon">
               <i class="fas fa-cloud-upload-alt"></i>
@@ -104,9 +100,9 @@
             <p class="drop-title">Drag &amp; drop your audio file here</p>
             <p class="drop-sub">or click to browse</p>
             <p class="drop-formats">WAV · MP3 · M4A · FLAC · OGG</p>
-            <input type="file" id="audioFile" accept=".wav,.mp3,.m4a,.flac,.ogg" hidden />
+            <input type="file" id="audioFile"
+              accept=".wav,.mp3,.m4a,.flac,.ogg" hidden />
           </div>
-
           <div class="file-preview hidden" id="filePreview">
             <div class="file-info">
               <div class="file-icon"><i class="fas fa-file-audio"></i></div>
@@ -114,7 +110,7 @@
                 <span class="file-name" id="fileName"></span>
                 <span class="file-size" id="fileSize"></span>
               </div>
-              <button class="file-remove" onclick="clearFile()" aria-label="Remove file">
+              <button class="file-remove" onclick="clearFile()">
                 <i class="fas fa-times"></i>
               </button>
             </div>
@@ -123,29 +119,29 @@
         </div>
 
         <!-- Record panel -->
-        <div class="panel hidden" id="panelRecord" role="tabpanel">
+        <div class="panel hidden" id="panelRecord">
           <div class="recorder">
             <div class="visualizer-container">
-              <canvas id="visualizer" width="600" height="120" aria-label="Audio visualizer"></canvas>
+              <canvas id="visualizer" width="600" height="120"></canvas>
               <div class="visualizer-overlay" id="vizOverlay">
                 <i class="fas fa-microphone-slash"></i>
                 <span>Click record to start</span>
               </div>
             </div>
-
             <div class="recorder-controls">
-              <div class="record-timer" id="recordTimer" aria-live="polite">00:00</div>
+              <div class="record-timer" id="recordTimer">00:00</div>
               <div class="record-buttons">
-                <button class="btn-record" id="btnRecord" onclick="toggleRecord()">
+                <button class="btn-record" id="btnRecord"
+                  onclick="toggleRecord()">
                   <div class="record-icon"><span class="rec-dot"></span></div>
                   <span id="recordLabel">Record</span>
                 </button>
-                <button class="btn-stop hidden" id="btnStop" onclick="stopRecord()">
-                  <i class="fas fa-stop"></i> <span>Stop</span>
+                <button class="btn-stop hidden" id="btnStop"
+                  onclick="stopRecord()">
+                  <i class="fas fa-stop"></i> Stop
                 </button>
               </div>
             </div>
-
             <div class="recording-preview hidden" id="recordingPreview">
               <audio id="recordedAudio" controls class="audio-player"></audio>
               <button class="btn-clear-rec" onclick="clearRecording()">
@@ -158,23 +154,27 @@
         <!-- Language selector -->
         <div class="lang-selector">
           <span class="lang-label">
-            <i class="fas fa-language"></i> Language
+            <i class="fas fa-language"></i> Transcription Language
           </span>
-          <div class="lang-options" role="group" aria-label="Language selection">
-            <button class="lang-btn active" data-lang="" id="langAuto" onclick="selectLang(this)">
+          <div class="lang-options">
+            <button class="lang-btn active" data-lang=""
+              onclick="selectLang(this)">
               🔍 Auto-detect
             </button>
-            <button class="lang-btn" data-lang="fr" id="langFr" onclick="selectLang(this)">
+            <button class="lang-btn" data-lang="fr"
+              onclick="selectLang(this)">
               🇫🇷 French
             </button>
-            <button class="lang-btn" data-lang="ar" id="langAr" onclick="selectLang(this)">
+            <button class="lang-btn" data-lang="ar"
+              onclick="selectLang(this)">
               🇹🇳 Arabic / Tunisian
             </button>
           </div>
         </div>
 
         <!-- Transcribe button -->
-        <button class="btn-transcribe" id="btnTranscribe" onclick="transcribe()">
+        <button class="btn-transcribe" id="btnTranscribe"
+          onclick="transcribe()">
           <span class="btn-text">
             <i class="fas fa-magic"></i> Transcribe Now
           </span>
@@ -182,7 +182,7 @@
         </button>
 
         <!-- Progress -->
-        <div class="progress-section hidden" id="progressSection" aria-live="polite">
+        <div class="progress-section hidden" id="progressSection">
           <div class="progress-bar-wrap">
             <div class="progress-bar" id="progressBar"></div>
           </div>
@@ -202,37 +202,40 @@
               <span>Done</span>
             </div>
           </div>
-          <p class="progress-label" id="progressLabel">Uploading audio file...</p>
+          <p class="progress-label" id="progressLabel">
+            Uploading audio file...
+          </p>
         </div>
 
         <!-- Error -->
-        <div class="error-box hidden" id="errorBox" role="alert">
+        <div class="error-box hidden" id="errorBox">
           <i class="fas fa-exclamation-triangle"></i>
           <span id="errorMsg"></span>
         </div>
 
       </main>
 
-      <!-- Result section -->
-      <section class="result-section hidden" id="resultSection" aria-live="polite">
+      <!-- ══════════════════════════════════════════════════════ -->
+      <!--  RESULT SECTION                                       -->
+      <!-- ══════════════════════════════════════════════════════ -->
+      <section class="result-section hidden" id="resultSection">
 
+        <!-- Result header -->
         <div class="result-header">
           <div class="result-title">
             <i class="fas fa-file-lines"></i>
             Transcription Result
           </div>
-          <div class="result-meta">
-            <span class="meta-badge" id="badgeFile">
-              <i class="fas fa-file-audio"></i>
-              <span id="fileResult"></span>
-            </span>
-          </div>
+          <span class="meta-badge" id="badgeFile">
+            <i class="fas fa-file-audio"></i>
+            <span id="fileResult"></span>
+          </span>
         </div>
 
-        <!-- Stats cards -->
+        <!-- Stats -->
         <div class="result-stats-grid">
           <div class="stat-card">
-            <div class="stat-card-icon lang-icon"><i class="fas fa-globe"></i></div>
+            <div class="stat-card-icon"><i class="fas fa-globe"></i></div>
             <div class="stat-card-body">
               <div class="stat-card-val" id="scLang">—</div>
               <div class="stat-card-lbl">Language</div>
@@ -260,7 +263,9 @@
             </div>
           </div>
           <div class="stat-card">
-            <div class="stat-card-icon"><i class="fas fa-weight-hanging"></i></div>
+            <div class="stat-card-icon">
+              <i class="fas fa-weight-hanging"></i>
+            </div>
             <div class="stat-card-body">
               <div class="stat-card-val" id="scSize">—</div>
               <div class="stat-card-lbl">File Size</div>
@@ -268,31 +273,157 @@
           </div>
         </div>
 
-        <div class="result-body">
-          <textarea id="transcriptionText" class="transcription-area" readonly
-            placeholder="Your transcription will appear here..."></textarea>
+        <!-- ── Transcript Block ──────────────────────────────── -->
+        <div class="content-block">
+          <div class="content-block-header">
+            <div class="content-block-title">
+              <i class="fas fa-align-left"></i>
+              Original Transcript
+            </div>
+            <div class="content-block-toolbar">
+              <button class="toolbar-btn" onclick="copyText()"
+                title="Copy to clipboard">
+                <i class="fas fa-copy"></i>
+                <span>Copy</span>
+              </button>
+              <button class="toolbar-btn" onclick="exportTXT()"
+                title="Export as TXT">
+                <i class="fas fa-file-alt"></i>
+                <span>TXT</span>
+              </button>
+              <button class="toolbar-btn" onclick="exportJSON()"
+                title="Export as JSON">
+                <i class="fas fa-code"></i>
+                <span>JSON</span>
+              </button>
+              <button class="toolbar-btn toolbar-btn-pdf"
+                onclick="exportPDF()" title="Export as PDF">
+                <i class="fas fa-file-pdf"></i>
+                <span>PDF</span>
+              </button>
+            </div>
+          </div>
+          <textarea id="transcriptionText" class="content-area" readonly
+            placeholder="Your transcription will appear here...">
+          </textarea>
         </div>
 
-        <!-- Export actions -->
-        <div class="result-actions">
-          <button class="action-btn" onclick="copyText()" id="btnCopy">
-            <i class="fas fa-copy"></i> Copy
-          </button>
-          <button class="action-btn action-txt" onclick="exportTXT()">
-            <i class="fas fa-file-alt"></i> .TXT
-          </button>
-          <button class="action-btn action-json" onclick="exportJSON()">
-            <i class="fas fa-code"></i> .JSON
-          </button>
-          <button class="action-btn action-pdf" onclick="exportPDF()">
-            <i class="fas fa-file-pdf"></i> .PDF
-          </button>
-          <button class="action-btn btn-new" onclick="resetAll()">
-            <i class="fas fa-plus"></i> New
+        <!-- ── Translation Block ─────────────────────────────── -->
+        <div class="content-block translation-content-block">
+          <div class="content-block-header translation-header">
+            <div class="content-block-title">
+              <i class="fas fa-language"></i>
+              AI Translation
+              <span class="powered-badge">Ollama Mistral</span>
+            </div>
+            <div class="translation-status-wrap">
+              <span class="translation-status-dot hidden"
+                id="translationDot"></span>
+              <span class="translation-status-text"
+                id="translationStatus">Select a language below</span>
+            </div>
+          </div>
+
+          <!-- Language grid -->
+          <div class="translation-lang-section">
+            <p class="translation-lang-label">
+              Translate to:
+            </p>
+            <div class="lang-picker-grid">
+              <button class="lang-pick-btn active"
+                data-tlang="English" onclick="pickTransLang(this)">
+                🇬🇧 English
+              </button>
+              <button class="lang-pick-btn"
+                data-tlang="French" onclick="pickTransLang(this)">
+                🇫🇷 French
+              </button>
+              <button class="lang-pick-btn"
+                data-tlang="Arabic" onclick="pickTransLang(this)">
+                🇸🇦 Arabic
+              </button>
+              <button class="lang-pick-btn"
+                data-tlang="Spanish" onclick="pickTransLang(this)">
+                🇪🇸 Spanish
+              </button>
+              <button class="lang-pick-btn"
+                data-tlang="German" onclick="pickTransLang(this)">
+                🇩🇪 German
+              </button>
+              <button class="lang-pick-btn"
+                data-tlang="Italian" onclick="pickTransLang(this)">
+                🇮🇹 Italian
+              </button>
+              <button class="lang-pick-btn"
+                data-tlang="Portuguese" onclick="pickTransLang(this)">
+                🇵🇹 Portuguese
+              </button>
+              <button class="lang-pick-btn"
+                data-tlang="Dutch" onclick="pickTransLang(this)">
+                🇳🇱 Dutch
+              </button>
+              <button class="lang-pick-btn"
+                data-tlang="Chinese" onclick="pickTransLang(this)">
+                🇨🇳 Chinese
+              </button>
+              <button class="lang-pick-btn"
+                data-tlang="Japanese" onclick="pickTransLang(this)">
+                🇯🇵 Japanese
+              </button>
+              <button class="lang-pick-btn"
+                data-tlang="Korean" onclick="pickTransLang(this)">
+                🇰🇷 Korean
+              </button>
+              <button class="lang-pick-btn"
+                data-tlang="Russian" onclick="pickTransLang(this)">
+                🇷🇺 Russian
+              </button>
+              <button class="lang-pick-btn"
+                data-tlang="Turkish" onclick="pickTransLang(this)">
+                🇹🇷 Turkish
+              </button>
+            </div>
+
+            <button class="btn-translate-run" id="btnTranslateNow"
+              onclick="translateTranscript()">
+              <i class="fas fa-bolt"></i>
+              <span id="translateBtnLabel">Translate Now</span>
+            </button>
+          </div>
+
+          <!-- Translation output -->
+          <div class="translation-output hidden" id="translationResult">
+            <div class="translation-output-header">
+              <span id="translationResultTitle">
+                <i class="fas fa-check-circle"></i> Translation
+              </span>
+              <div class="content-block-toolbar">
+                <button class="toolbar-btn"
+                  onclick="copyTranslation()" title="Copy translation">
+                  <i class="fas fa-copy"></i>
+                  <span>Copy</span>
+                </button>
+                <button class="toolbar-btn"
+                  onclick="exportTranslationTXT()" title="Export TXT">
+                  <i class="fas fa-file-alt"></i>
+                  <span>TXT</span>
+                </button>
+              </div>
+            </div>
+            <textarea id="translationText" class="content-area"
+              readonly placeholder="Translation will appear here...">
+            </textarea>
+          </div>
+        </div>
+
+        <!-- Bottom action -->
+        <div class="result-bottom">
+          <button class="btn-new-trans" onclick="resetAll()">
+            <i class="fas fa-plus"></i> New Transcription
           </button>
         </div>
+
       </section>
-
     </div><!-- /pageTrans -->
 
     <!-- ════════════════════════════════════════════════════════ -->
@@ -302,8 +433,7 @@
 
       <section class="hero" style="margin-bottom:28px">
         <div class="hero-tag">
-          <span class="dot"></span>
-          SQLite · Local database
+          <span class="dot"></span> SQLite · Local database
         </div>
         <h2 class="hero-title" style="font-size:clamp(26px,4vw,46px)">
           Transcription <span class="gradient-text">History</span>
@@ -313,42 +443,36 @@
         </p>
       </section>
 
-      <!-- Controls bar -->
       <div class="history-controls">
         <div class="history-search-wrap">
           <i class="fas fa-search hist-search-icon"></i>
           <input type="search" id="historySearch" class="history-search"
             placeholder="Search filenames or transcript text…"
-            oninput="onSearchInput(this.value)"
-            aria-label="Search history" />
+            oninput="onSearchInput(this.value)" />
           <button class="btn-clear-search hidden" id="btnClearSearch"
-            onclick="clearSearch()" aria-label="Clear search">
+            onclick="clearSearch()">
             <i class="fas fa-times"></i>
           </button>
         </div>
         <div class="history-ctrl-right">
-          <button class="btn-refresh" onclick="loadHistory()" title="Refresh">
+          <button class="btn-refresh" onclick="loadHistory()">
             <i class="fas fa-sync-alt"></i>
           </button>
-          <button class="btn-danger" onclick="clearAllHistory()" id="btnClearAll">
+          <button class="btn-danger" onclick="clearAllHistory()">
             <i class="fas fa-trash-alt"></i> Clear All
           </button>
         </div>
       </div>
 
-      <!-- Count label -->
       <div class="history-count-label" id="historyCountLabel"></div>
+      <div id="historyList" class="history-list"></div>
 
-      <!-- History list -->
-      <div id="historyList" class="history-list" aria-live="polite">
-        <!-- Injected by JS -->
-      </div>
-
-      <!-- Empty state -->
       <div class="history-empty hidden" id="historyEmpty">
         <div class="history-empty-icon"><i class="fas fa-inbox"></i></div>
         <p class="history-empty-title">No transcriptions yet</p>
-        <p class="history-empty-sub">Upload or record audio and transcribe it to see results here.</p>
+        <p class="history-empty-sub">
+          Upload or record audio to see results here.
+        </p>
         <button class="btn-go-trans" onclick="switchPage('transcribe')">
           <i class="fas fa-magic"></i> Start Transcribing
         </button>
@@ -357,12 +481,13 @@
     </div><!-- /pageHistory -->
 
     <footer class="footer">
-      TranscriptoSense &copy; 2026 &mdash; Powered by OpenAI Whisper Large v3 &middot; Fine-tuned for Tunisian Dialect Research
+      TranscriptoSense &copy; 2026 &mdash;
+      Powered by OpenAI Whisper Large v3 &middot;
+      Fine-tuned for Tunisian Dialect Research
     </footer>
 
-  </div><!-- /app -->
+  </div>
 
-  <!-- jsPDF CDN for client-side PDF export -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="app.js"></script>
 </body>

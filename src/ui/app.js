@@ -1,7 +1,13 @@
 /* ============================================================
-   TranscriptoSense — app.js
-   Full rewrite: adds History, Language selector, Stats cards,
-   and 3-format exports (TXT, JSON, PDF).
+   TranscriptoSense — app.js  v2.1
+   Upgrades:
+     • translateText() + loadLanguages() implemented
+     • Backend connectivity banner
+     • speakers_count displayed in stat card
+     • model_used badge showing actual model
+     • History card expand/collapse for full transcript
+     • Toast notification improvements
+     • Waveform icon fix
    ============================================================ */
 
 const API_BASE = "http://127.0.0.1:8000/api";
@@ -21,10 +27,12 @@ let analyser      = null;
 let animationId   = null;
 let currentResult = null;        // Last transcription API response
 let searchDebounce = null;
+let backendOnline = null;        // null = unknown, true/false = checked
 
 // ── Particles ─────────────────────────────────────────────────
 (function createParticles() {
   const container = document.getElementById("particles");
+  if (!container) return;
   for (let i = 0; i < 40; i++) {
     const p = document.createElement("div");
     p.style.cssText = `
@@ -52,6 +60,74 @@ let searchDebounce = null;
   document.head.appendChild(style);
 })();
 
+// ── Backend connectivity check ────────────────────────────────
+async function checkBackend() {
+  try {
+    const res = await fetch(`${API_BASE.replace("/api", "")}/health`, { signal: AbortSignal.timeout(3000) });
+    if (res.ok) {
+      backendOnline = true;
+      hideBanner();
+      // Load languages for translation dropdown
+      loadLanguages();
+      loadStatsBadge();
+    } else {
+      throw new Error("Non-ok response");
+    }
+  } catch {
+    backendOnline = false;
+    showBanner();
+  }
+}
+
+function showBanner() {
+  let banner = document.getElementById("offlineBanner");
+  if (!banner) {
+    banner = document.createElement("div");
+    banner.id = "offlineBanner";
+    banner.className = "offline-banner";
+    banner.innerHTML = `
+      <i class="fas fa-exclamation-triangle"></i>
+      <span>Backend server is not running. Start it with:
+        <code>uvicorn src.api.main:app --reload</code>
+        from the project root.
+      </span>
+      <button class="banner-retry" onclick="retryConnection()" title="Retry">
+        <i class="fas fa-sync-alt"></i> Retry
+      </button>
+      <button class="banner-dismiss" onclick="hideBanner()" aria-label="Dismiss">&times;</button>
+    `;
+    document.querySelector(".app").prepend(banner);
+  }
+  banner.classList.remove("hidden");
+}
+
+function hideBanner() {
+  const b = document.getElementById("offlineBanner");
+  if (b) b.classList.add("hidden");
+}
+
+async function retryConnection() {
+  const btn = document.querySelector(".banner-retry");
+  if (btn) { btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking…'; btn.disabled = true; }
+  await checkBackend();
+  if (btn) { btn.innerHTML = '<i class="fas fa-sync-alt"></i> Retry'; btn.disabled = false; }
+}
+
+// ── Language dropdown for translation ────────────────────────
+async function loadLanguages() {
+  const sel = document.getElementById("targetLang");
+  if (!sel) return;
+  try {
+    const res  = await fetch(`${API_BASE}/languages`);
+    const data = await res.json();
+    const langs = data.languages || [];
+    sel.innerHTML = `<option value="">Select language…</option>` +
+      langs.map(l => `<option value="${esc(l.code)}">${esc(l.name)}</option>`).join("");
+  } catch {
+    // Backend might be offline; keep placeholder option
+  }
+}
+
 // ── Page switching ─────────────────────────────────────────────
 function switchPage(page) {
   currentPage = page;
@@ -59,6 +135,8 @@ function switchPage(page) {
   document.getElementById("pageHistory").classList.toggle("hidden", page !== "history");
   document.getElementById("navTranscribe").classList.toggle("active", page === "transcribe");
   document.getElementById("navHistory").classList.toggle("active", page === "history");
+  document.getElementById("navTranscribe").setAttribute("aria-current", page === "transcribe" ? "page" : "false");
+  document.getElementById("navHistory").setAttribute("aria-current", page === "history" ? "page" : "false");
 
   if (page === "history") {
     loadHistory();
@@ -74,6 +152,8 @@ function switchTab(tab) {
   document.getElementById("tabRecord").classList.toggle("active", tab === "record");
   document.getElementById("panelUpload").classList.toggle("hidden", tab !== "upload");
   document.getElementById("panelRecord").classList.toggle("hidden", tab !== "record");
+  document.getElementById("tabUpload").setAttribute("aria-selected", tab === "upload");
+  document.getElementById("tabRecord").setAttribute("aria-selected", tab === "record");
   hideError();
 }
 
@@ -290,10 +370,17 @@ async function transcribe() {
     hideProgress();
     showResult(data);
     loadStatsBadge();
+    backendOnline = true;
+    hideBanner();
 
   } catch (err) {
     hideProgress();
-    showError(err.message);
+    if (err.message.includes("Failed to fetch") || err.message.includes("NetworkError")) {
+      showError("Cannot reach backend. Make sure the server is running on port 8000.");
+      showBanner();
+    } else {
+      showError(err.message);
+    }
   } finally {
     btn.disabled = false;
   }
@@ -320,24 +407,109 @@ function showResult(data) {
   const isArabic = detectRTL(text);
 
   // Stats cards
-  document.getElementById("scLang").textContent  = data.language || "Unknown";
-  document.getElementById("scWords").textContent = countWords(text).toLocaleString();
-  document.getElementById("scChars").textContent = text.length.toLocaleString();
-  document.getElementById("scDur").textContent   = formatDuration(data.duration_sec || 0);
-  document.getElementById("scSize").textContent  = data.file_size  || "—";
+  document.getElementById("scLang").textContent     = data.language || "Unknown";
+  document.getElementById("scWords").textContent    = countWords(text).toLocaleString();
+  document.getElementById("scChars").textContent    = text.length.toLocaleString();
+  document.getElementById("scDur").textContent      = formatDuration(data.duration_sec || 0);
+  document.getElementById("scSize").textContent     = data.file_size  || "—";
+  const speakersEl = document.getElementById("scSpeakers");
+  if (speakersEl) {
+    speakersEl.textContent = data.has_diarization
+      ? (data.speakers_count > 0 ? data.speakers_count : "—")
+      : "—";
+  }
 
   // File badge
   document.getElementById("fileResult").textContent = data.filename || "";
+
+  // Model badge — show actual model used
+  const modelEl = document.getElementById("modelResult");
+  if (modelEl) {
+    modelEl.textContent = data.model_used || "whisper-small";
+    const modelBadge = document.getElementById("badgeModel");
+    if (modelBadge) {
+      const isDeepgram = (data.model_used || "").includes("deepgram");
+      modelBadge.className = `meta-badge ${isDeepgram ? "meta-badge-deepgram" : "meta-badge-model"}`;
+    }
+  }
 
   // Transcription textarea
   const area = document.getElementById("transcriptionText");
   area.value = text;
   area.classList.toggle("rtl", isArabic);
 
+  // Show/hide translation panel based on whether text exists
+  const transPanel = document.getElementById("translationPanel");
+  if (transPanel) {
+    transPanel.classList.toggle("hidden", !text.trim());
+    // Reset translation result
+    const translatedResult = document.getElementById("translatedResult");
+    if (translatedResult) translatedResult.classList.add("hidden");
+    const translatedText = document.getElementById("translatedText");
+    if (translatedText) translatedText.value = "";
+  }
+
   // Show section
   const section = document.getElementById("resultSection");
   section.classList.remove("hidden");
   section.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+// ── Translation ───────────────────────────────────────────────
+async function translateText() {
+  const text   = document.getElementById("transcriptionText").value;
+  const target = document.getElementById("targetLang").value;
+
+  if (!text.trim()) { showToast("No transcription text to translate.", "error"); return; }
+  if (!target)      { showToast("Please select a target language.", "error"); return; }
+
+  const btn   = document.getElementById("btnTranslate");
+  const label = document.getElementById("translateLabel");
+  btn.disabled = true;
+  if (label) label.textContent = "Translating…";
+
+  try {
+    const res = await fetch(`${API_BASE}/translate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, target }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || "Translation failed.");
+    }
+
+    const data = await res.json();
+    const translated = data.translated_text || "";
+
+    document.getElementById("translatedText").value = translated;
+    document.getElementById("translatedText").classList.toggle("rtl", detectRTL(translated));
+
+    // Show the translated badge
+    const badge = document.getElementById("translatedBadge");
+    if (badge) {
+      const langName = document.getElementById("targetLang").options[
+        document.getElementById("targetLang").selectedIndex
+      ].text;
+      badge.textContent = `→ ${langName}`;
+    }
+
+    document.getElementById("translatedResult").classList.remove("hidden");
+    showToast("Translation complete!", "success");
+
+  } catch (err) {
+    showToast(`Translation failed: ${err.message}`, "error");
+  } finally {
+    btn.disabled = false;
+    if (label) label.textContent = "Translate";
+  }
+}
+
+function copyTranslation() {
+  const text = document.getElementById("translatedText").value;
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(() => showToast("Translation copied!", "success"));
 }
 
 // ── Copy ─────────────────────────────────────────────────────
@@ -357,7 +529,7 @@ function exportTXT() {
     "=".repeat(46),
     `Filename   : ${d.filename}`,
     `Language   : ${d.language}`,
-    `Model      : ${d.model_used || "whisper-large-v3"}`,
+    `Model      : ${d.model_used || "whisper-small"}`,
     `File Size  : ${d.file_size || "—"}`,
     `Duration   : ${dur}`,
     `Words      : ${countWords(d.transcription || "")}`,
@@ -376,16 +548,18 @@ function exportTXT() {
 function exportJSON() {
   if (!currentResult) return;
   const payload = {
-    id:            currentResult.id,
-    filename:      currentResult.filename,
-    language:      currentResult.language,
-    model_used:    currentResult.model_used || "whisper-large-v3",
-    file_size:     currentResult.file_size,
-    duration_sec:  currentResult.duration_sec,
-    word_count:    countWords(currentResult.transcription || ""),
-    char_count:    (currentResult.transcription || "").length,
-    generated_at:  new Date().toISOString(),
-    transcription: currentResult.transcription,
+    id:              currentResult.id,
+    filename:        currentResult.filename,
+    language:        currentResult.language,
+    model_used:      currentResult.model_used || "whisper-small",
+    file_size:       currentResult.file_size,
+    duration_sec:    currentResult.duration_sec,
+    speakers_count:  currentResult.speakers_count,
+    has_diarization: currentResult.has_diarization,
+    word_count:      countWords(currentResult.transcription || ""),
+    char_count:      (currentResult.transcription || "").length,
+    generated_at:    new Date().toISOString(),
+    transcription:   currentResult.transcription,
   };
   downloadBlob(new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" }),
     `${baseName(currentResult.filename)}_transcription.json`);
@@ -415,7 +589,7 @@ function exportPDF() {
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
-  doc.text("AI Transcription Report — Powered by Whisper Large v3", mg, 30);
+  doc.text("AI Transcription Report", mg, 30);
 
   // ── Accent bar ───────────────────────────────────────────────
   doc.setFillColor(6, 182, 212);
@@ -428,16 +602,14 @@ function exportPDF() {
   const meta = [
     ["File",       currentResult.filename],
     ["Language",   currentResult.language],
-    ["Model",      currentResult.model_used || "whisper-large-v3"],
+    ["Model",      currentResult.model_used || "whisper-small"],
     ["File Size",  currentResult.file_size || "—"],
     ["Duration",   formatDuration(currentResult.duration_sec || 0)],
     ["Words",      countWords(currentResult.transcription || "").toLocaleString()],
     ["Generated",  new Date().toLocaleString()],
   ];
 
-  meta.forEach(([key, val]) => {
-    // Row background (alternate)
-    const rowIdx = meta.indexOf([key, val]);
+  meta.forEach(([key, val], rowIdx) => {
     if (rowIdx % 2 === 0) {
       doc.setFillColor(245, 245, 252);
       doc.rect(mg - 2, y - 5, cw + 4, 9, "F");
@@ -476,7 +648,6 @@ function exportPDF() {
     if (y > ph - mg - 10) {
       doc.addPage();
       y = mg;
-      // Page header strip
       doc.setFillColor(99, 102, 241);
       doc.rect(0, 0, pw, 12, "F");
       doc.setFont("helvetica", "bold");
@@ -516,6 +687,8 @@ function resetAll() {
   currentResult = null;
   document.getElementById("resultSection").classList.add("hidden");
   document.getElementById("transcriptionText").value = "";
+  const translatedResult = document.getElementById("translatedResult");
+  if (translatedResult) translatedResult.classList.add("hidden");
   hideError();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
@@ -536,9 +709,16 @@ function showToast(msg, type = "default") {
   t.className = "toast-msg";
   if (type === "success") t.classList.add("success-toast");
   if (type === "error")   t.classList.add("error-toast");
-  t.innerHTML = `<i class="fas fa-${type === "success" ? "check-circle" : type === "error" ? "exclamation-circle" : "info-circle"}"></i> ${msg}`;
+  const icon = type === "success" ? "check-circle" : type === "error" ? "exclamation-circle" : "info-circle";
+  t.innerHTML = `<i class="fas fa-${icon}"></i> ${esc(msg)}`;
   document.body.appendChild(t);
-  setTimeout(() => { t.style.opacity = "0"; t.style.transform = "translateY(12px)"; t.style.transition = "all 0.3s"; setTimeout(() => t.remove(), 320); }, 2600);
+  // Animate in
+  requestAnimationFrame(() => t.classList.add("toast-visible"));
+  setTimeout(() => {
+    t.classList.remove("toast-visible");
+    t.classList.add("toast-hiding");
+    setTimeout(() => t.remove(), 350);
+  }, 2800);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -592,10 +772,13 @@ function renderHistoryCards(records, total) {
   label.textContent = `${total} transcription${total !== 1 ? "s" : ""} found`;
 
   records.forEach((r, i) => {
-    const preview  = (r.transcription || "").slice(0, 180) + ((r.transcription || "").length > 180 ? "…" : "");
+    const preview  = (r.transcription || "").slice(0, 200) + ((r.transcription || "").length > 200 ? "…" : "");
     const isRTL    = detectRTL(r.transcription || "");
     const dur      = formatDuration(r.duration_sec || 0);
     const dateStr  = formatDate(r.created_at);
+    const isDeepgram = (r.model_used || "").includes("deepgram");
+    const modelIcon  = isDeepgram ? "fa-bolt" : "fa-robot";
+    const modelClass = isDeepgram ? "hbadge-deepgram" : "hbadge-model";
 
     const card = document.createElement("div");
     card.className = "history-card";
@@ -608,10 +791,21 @@ function renderHistoryCards(records, total) {
         </div>
         <div class="history-card-badges">
           <span class="hbadge hbadge-lang"><i class="fas fa-globe"></i>${esc(r.language || "Unknown")}</span>
-          <span class="hbadge hbadge-model"><i class="fas fa-robot"></i>${esc(r.model_used || "whisper")}</span>
+          <span class="hbadge ${modelClass}"><i class="fas ${modelIcon}"></i>${esc(r.model_used || "whisper")}</span>
+          ${r.has_diarization ? `<span class="hbadge hbadge-diar"><i class="fas fa-users"></i>${r.speakers_count || "?"} speakers</span>` : ""}
         </div>
       </div>
-      <div class="history-card-preview${isRTL ? " rtl" : ""}">${esc(preview) || "<em>No transcription text</em>"}</div>
+      <div class="history-card-preview${isRTL ? " rtl" : ""}" 
+           onclick="toggleExpand(this)" 
+           title="Click to expand/collapse"
+           style="cursor:pointer">
+        <span class="preview-text">${esc(preview) || "<em>No transcription text</em>"}</span>
+        ${(r.transcription || "").length > 200 ? `
+        <div class="full-text hidden${isRTL ? " rtl" : ""}">
+          ${esc(r.transcription || "")}
+        </div>
+        <span class="expand-hint"><i class="fas fa-chevron-down"></i> Show more</span>` : ""}
+      </div>
       <div class="history-card-meta">
         <span><i class="fas fa-calendar-alt"></i>${dateStr}</span>
         ${r.file_size ? `<span><i class="fas fa-weight-hanging"></i>${esc(r.file_size)}</span>` : ""}
@@ -620,7 +814,7 @@ function renderHistoryCards(records, total) {
       </div>
       <div class="history-card-actions">
         <button class="hact-btn" onclick="downloadRecord(${r.id})">
-          <i class="fas fa-download"></i> Download TXT
+          <i class="fas fa-download"></i> TXT
         </button>
         <button class="hact-btn" onclick="exportHistoryJSON(${r.id})">
           <i class="fas fa-code"></i> JSON
@@ -632,6 +826,22 @@ function renderHistoryCards(records, total) {
     `;
     list.appendChild(card);
   });
+}
+
+function toggleExpand(el) {
+  const fullText  = el.querySelector(".full-text");
+  const hint      = el.querySelector(".expand-hint");
+  const previewSpan = el.querySelector(".preview-text");
+  if (!fullText) return;
+
+  const isExpanded = !fullText.classList.contains("hidden");
+  fullText.classList.toggle("hidden", isExpanded);
+  if (previewSpan) previewSpan.classList.toggle("hidden", !isExpanded);
+  if (hint) {
+    hint.innerHTML = isExpanded
+      ? '<i class="fas fa-chevron-down"></i> Show more'
+      : '<i class="fas fa-chevron-up"></i> Show less';
+  }
 }
 
 function renderSkeletons(n) {
@@ -765,9 +975,8 @@ function countWords(text) {
 }
 
 function detectRTL(text) {
-  // Arabic/Hebrew unicode ranges
   const rtlRe = /[\u0600-\u06FF\u0750-\u077F\u0590-\u05FF]/;
-  const rtlChars = (text.match(rtlRe) || []).length;
+  const rtlChars = (text.match(new RegExp(rtlRe.source, "g")) || []).length;
   return rtlChars / (text.length || 1) > 0.3;
 }
 
@@ -776,7 +985,11 @@ function baseName(filename) {
 }
 
 function esc(str) {
-  return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  return String(str)
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;");
 }
 
 function downloadBlob(blob, filename) {
@@ -791,4 +1004,4 @@ function downloadBlob(blob, filename) {
 function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 // ── Init ──────────────────────────────────────────────────────
-loadStatsBadge();
+checkBackend();

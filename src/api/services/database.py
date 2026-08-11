@@ -27,36 +27,53 @@ def init_db():
             filename        TEXT    NOT NULL,
             language        TEXT,
             transcription   TEXT,
-            model_used      TEXT    DEFAULT 'whisper-large-v3',
+            model_used      TEXT    DEFAULT 'whisper-small',
             file_size       TEXT,
             duration_sec    REAL    DEFAULT 0,
+            speakers_count  INTEGER DEFAULT 0,
+            has_diarization INTEGER DEFAULT 0,
             created_at      TEXT    DEFAULT (datetime('now', 'localtime'))
         )
     """)
 
-    # Add duration_sec column gracefully for users upgrading from older schema
-    try:
-        cursor.execute("ALTER TABLE transcriptions ADD COLUMN duration_sec REAL DEFAULT 0")
-    except Exception:
-        pass  # Column already exists — that's fine
+    # Gracefully add columns for users upgrading from older schemas
+    for col, definition in [
+        ("duration_sec",    "REAL DEFAULT 0"),
+        ("speakers_count",  "INTEGER DEFAULT 0"),
+        ("has_diarization", "INTEGER DEFAULT 0"),
+    ]:
+        try:
+            cursor.execute(f"ALTER TABLE transcriptions ADD COLUMN {col} {definition}")
+        except Exception:
+            pass  # Column already exists — fine
 
     conn.commit()
     conn.close()
     print(f"[DB] Initialized: {DB_PATH}")
 
 
-def save_transcription(filename: str, language: str, transcription: str,
-                       file_size: str = "", duration_sec: float = 0.0) -> int:
+def save_transcription(
+    filename: str,
+    language: str,
+    transcription: str,
+    model_used: str = "whisper-small",
+    file_size: str = "",
+    duration_sec: float = 0.0,
+    speakers_count: int = 0,
+    has_diarization: bool = False,
+) -> int:
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        INSERT INTO transcriptions (filename, language, transcription, model_used, file_size, duration_sec)
-        VALUES (?, ?, ?, ?, ?, ?)
-    """, (filename, language, transcription, "whisper-large-v3", file_size, duration_sec))
+        INSERT INTO transcriptions
+            (filename, language, transcription, model_used, file_size, duration_sec, speakers_count, has_diarization)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (filename, language, transcription, model_used, file_size, duration_sec,
+          speakers_count, int(has_diarization)))
     conn.commit()
     new_id = cursor.lastrowid
     conn.close()
-    print(f"[DB] Saved ID={new_id} — {filename}")
+    print(f"[DB] Saved ID={new_id} — {filename} [{model_used}]")
     return new_id
 
 
@@ -64,7 +81,8 @@ def get_all_transcriptions():
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT id, filename, language, transcription, model_used, file_size, duration_sec, created_at
+        SELECT id, filename, language, transcription, model_used, file_size,
+               duration_sec, speakers_count, has_diarization, created_at
         FROM transcriptions
         ORDER BY created_at DESC
     """)
@@ -77,7 +95,8 @@ def get_transcription_by_id(transcription_id: int):
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT id, filename, language, transcription, model_used, file_size, duration_sec, created_at
+        SELECT id, filename, language, transcription, model_used, file_size,
+               duration_sec, speakers_count, has_diarization, created_at
         FROM transcriptions WHERE id = ?
     """, (transcription_id,))
     row = cursor.fetchone()
@@ -110,7 +129,8 @@ def search_transcriptions(query: str):
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT id, filename, language, transcription, model_used, file_size, duration_sec, created_at
+        SELECT id, filename, language, transcription, model_used, file_size,
+               duration_sec, speakers_count, has_diarization, created_at
         FROM transcriptions
         WHERE transcription LIKE ? OR filename LIKE ?
         ORDER BY created_at DESC

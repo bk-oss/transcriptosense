@@ -3,14 +3,30 @@ import librosa
 import time
 import os
 import datetime
+from pathlib import Path
 from transformers import WhisperProcessor, WhisperForConditionalGeneration
+from config import CFG
 
 # --- Config ---
-MODEL_PATH = r"C:\Users\mbaklouti1\Desktop\transcriptosense\models\whisper-large-v3"
-AUDIO_PATH = r"C:\Users\mbaklouti1\Desktop\transcriptosense\data\interim\meeting_16k_mono.wav"
-OUTPUT_DIR = r"C:\Users\mbaklouti1\Desktop\transcriptosense\outputs"
-LANGUAGE   = "ar"
-TASK       = "transcribe"
+# Use config module for portable paths instead of hardcoded user paths
+LANGUAGE   = os.getenv("TRANSCRIBE_LANGUAGE", "ar")
+TASK       = os.getenv("TRANSCRIBE_TASK", "transcribe")
+
+# Get model path from config or use default
+BASE_DIR = CFG.BASE_DIR if hasattr(CFG, 'BASE_DIR') else Path(__file__).parent
+MODELS_DIR = getattr(CFG, 'MODELS_DIR', BASE_DIR / "models")
+DATA_INTERIM = getattr(CFG, 'DATA_PROCESSED', BASE_DIR / "data" / "interim")
+OUTPUT_DIR = str(getattr(CFG, 'OUT_TRANSCRIPTS', BASE_DIR / "outputs" / "transcripts"))
+
+# Auto-detect model path
+MODEL_PATH = os.getenv(
+    "WHISPER_MODEL_PATH",
+    str(MODELS_DIR / "whisper-large-v3")
+)
+AUDIO_PATH = os.getenv(
+    "AUDIO_FILE_PATH",
+    str(DATA_INTERIM / "meeting_16k_mono.wav")
+)
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 

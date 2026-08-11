@@ -1,89 +1,49 @@
 # ============================================================
-# TranscriptoSense — Local (CPU) Requirements
+# TranscriptoSense — Core Requirements (Python 3.12 Compatible)
 # Install with: pip install -r requirements.txt
 #
-# NOTE: Heavy models (Whisper large, pyannote) should run
-# on Colab/GPU. This file covers everything that works on CPU.
+# NOTE: This is a minimal, working set of dependencies for Python 3.12
+# Heavy ML models (Whisper large, pyannote, librosa) are optional
+# For GPU support or advanced features, use requirements_gpu.txt
 # ============================================================
 
-# ── Audio Processing ────────────────────────────────────────
-soundfile>=0.12.1           # Read/write audio files
-librosa>=0.10.1             # Audio analysis, resampling
-pydub>=0.25.1               # Audio format conversion (needs ffmpeg)
-webrtcvad>=2.0.10           # Voice Activity Detection
-sounddevice>=0.4.6          # Cross-platform audio I/O
-# pyaudio>=0.2.13            # OPTIONAL — only for live mic capture (Platinum tier).
-                             # Skip unless you need it: often needs a C compiler on
-                             # Windows without a precompiled wheel for your Python
-                             # version. sounddevice above covers most needs instead.
-
-# ── ASR (CPU-friendly) ──────────────────────────────────────
-faster-whisper>=1.0.0       # Faster Whisper with int8 CPU support
-openai-whisper>=20231117    # Official Whisper (fallback)
-
-# ── Speaker Diarization (CPU fallback) ──────────────────────
-pyannote.audio>=3.1.0       # Speaker diarization (slow on CPU, fast on GPU)
-# Requires HuggingFace token — see .env.example
-
-# ── NLP / Transformers ──────────────────────────────────────
-transformers>=4.40.0        # HuggingFace models (NER, summarization, sentiment)
-sentence-transformers>=2.7.0 # Multilingual embeddings (intfloat/multilingual-e5)
-torch>=2.2.0                # PyTorch CPU version
-tokenizers>=0.19.0
-
-# ── Keyword Extraction ──────────────────────────────────────
-keybert>=0.8.3              # Keyword extraction using BERT embeddings
-scikit-learn>=1.4.0         # TF-IDF fallback, cosine similarity
-numpy>=1.26.0
-scipy>=1.12.0
-
-# ── NER & Text Processing ───────────────────────────────────
-spacy>=3.7.0                # Rule-based NLP, tokenization
-# After install, download FR model: python -m spacy download fr_core_news_sm
-# camel-tools>=1.5.2         # OPTIONAL — Arabic morphological analysis (Gold tier+).
-                             # Built mainly for Linux/Mac; known to be finicky on
-                             # Windows. Defer until you actually need deep Arabic
-                             # morphology — Whisper + regex rules cover Bronze/Silver.
-langdetect>=1.0.9           # Language detection per segment
-ftfy>=6.1.3                 # Fix broken/garbled unicode text
-
-# ── Evaluation Metrics ──────────────────────────────────────
-jiwer>=3.0.3                # WER / CER computation
-rouge-score>=0.1.2          # ROUGE for summarization eval
-bert-score>=0.3.13          # BERTScore for summarization eval
-
-# ── Summarization ───────────────────────────────────────────
-sumy>=0.11.0                # Extractive summarization (Bronze tier, CPU-friendly)
-# Abstractive: use mT5 via transformers (above)
-
-# ── Data & Storage ──────────────────────────────────────────
-pandas>=2.2.0               # DataFrames for transcripts and annotations
+# ── Core Dependencies ───────────────────────────────────────
+python-dotenv>=1.0.0        # Load .env variables
+pyyaml>=6.0.0               # YAML config files  
 tqdm>=4.66.0                # Progress bars
-python-dotenv>=1.0.0        # Load .env variables (HF token, etc.)
-pyyaml>=6.0.1               # YAML config files
+click>=8.1.7                # CLI utilities
 
-# ── API ─────────────────────────────────────────────────────
-fastapi>=0.111.0            # REST API
-uvicorn[standard]>=0.29.0   # ASGI server for FastAPI
-python-multipart>=0.0.9     # File upload support in FastAPI
-aiofiles>=23.2.1            # Async file I/O
+# ── Numerics ────────────────────────────────────────────────
+numpy>=1.26.0               # Numerical computing
+scipy>=1.11.0               # Scientific computing
+pandas>=2.0.0               # DataFrames
 
-# ── UI ──────────────────────────────────────────────────────
-streamlit>=1.35.0           # Main web UI
-gradio>=4.36.0              # Alternative UI (lighter)
+# ── Machine Learning / NLP ─────────────────────────────────
+scikit-learn>=1.3.0         # ML utilities
+transformers>=4.35.0        # HuggingFace models
+tokenizers>=0.15.0          # Fast tokenization  
+pydantic>=2.0.0             # Data validation
 
-# ── Export (DOCX / PDF) ─────────────────────────────────────
-python-docx>=1.1.0          # Generate Word documents
-reportlab>=4.1.0            # Generate PDFs
-icalendar>=5.0.12           # Export tasks as .ics calendar
+# ── Web Framework ──────────────────────────────────────────
+fastapi>=0.104.0            # REST API
+uvicorn[standard]>=0.24.0   # ASGI server
+python-multipart>=0.0.6     # File uploads
+aiofiles>=23.2.0            # Async file I/O
 
-# ── Utilities ───────────────────────────────────────────────
-click>=8.1.7                # CLI for pipeline scripts
-rich>=13.7.0                # Beautiful terminal output
-loguru>=0.7.2               # Better logging
-httpx>=0.27.0               # Async HTTP client
+# ── Data & Export ──────────────────────────────────────────
+python-docx>=1.1.0          # Word documents
+reportlab>=4.0.0            # PDF generation
+icalendar>=5.0.0            # Calendar export
 
-# ── Dev / Testing ───────────────────────────────────────────
-pytest>=8.2.0
-pytest-asyncio>=0.23.0
-black>=24.4.0               # Code formatter
+# ── UI ─────────────────────────────────────────────────────
+streamlit>=1.30.0           # Web UI
+
+# ── Utilities ──────────────────────────────────────────────
+rich>=13.7.0                # Beautiful output
+loguru>=0.7.0               # Logging
+requests>=2.31.0            # HTTP client
+
+# ── Testing ────────────────────────────────────────────────
+pytest>=7.4.0               # Unit tests
+pytest-asyncio>=0.21.0      # Async tests
+black>=23.10.0              # Code formatting

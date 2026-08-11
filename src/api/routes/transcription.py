@@ -1,4 +1,5 @@
 import os
+import json
 from uuid import uuid4
 from pathlib import Path
 from typing import Optional
@@ -48,12 +49,27 @@ async def transcribe(
         lang_hint = language.strip() if language and language.strip() else None
         result = transcribe_audio_file(temp_path, language=lang_hint)
 
+        # Extract speakers count from diarization data
+        speakers_count = 0
+        if result.get("speakers"):
+            try:
+                speakers_data = json.loads(result["speakers"]) if isinstance(result["speakers"], str) else result["speakers"]
+                speakers_count = len(set(s.get("speaker") for s in speakers_data))
+            except Exception:
+                speakers_count = 0
+
+        model_used = result.get("model_used", "whisper-small")
+        has_diarization = result.get("has_diarization", False)
+
         record_id = save_transcription(
             filename=file.filename,
             language=result.get("language", "unknown"),
             transcription=result.get("text", ""),
+            model_used=model_used,
             file_size=file_size_str,
             duration_sec=result.get("duration_sec", 0.0),
+            speakers_count=speakers_count,
+            has_diarization=has_diarization,
         )
 
         return TranscriptionResponse(
@@ -61,15 +77,20 @@ async def transcribe(
             filename=file.filename,
             language=result.get("language", "unknown"),
             transcription=result.get("text", ""),
-            model_used="whisper-large-v3",
+            model_used=model_used,
             file_size=file_size_str,
             duration_sec=result.get("duration_sec", 0.0),
+            speakers_count=speakers_count if speakers_count > 0 else None,
+            has_diarization=has_diarization,
         )
 
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(
+            status_code=500,
+            detail=f"Transcription failed: {str(e)}"
+        )
 
     finally:
         if os.path.exists(temp_path):

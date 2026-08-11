@@ -5,12 +5,13 @@ from pathlib import Path
 
 from src.api.routes.transcription import router as transcription_router
 from src.api.routes.history import router as history_router
+from src.api.routes.translation import router as translation_router
 from src.api.services.database import init_db
 
 app = FastAPI(
     title="Transcriptosense API",
-    version="2.0.0",
-    description="Backend API for multilingual audio transcription with history",
+    version="2.1.0",
+    description="Backend API for multilingual audio transcription with history and translation",
 )
 
 app.add_middleware(
@@ -30,11 +31,12 @@ def startup():
 # ── API routes ────────────────────────────────────────────────────────────────
 app.include_router(transcription_router, prefix="/api")
 app.include_router(history_router, prefix="/api")
+app.include_router(translation_router, prefix="/api")
 
 
 @app.get("/health")
 def health_check():
-    return {"status": "ok", "version": "2.0.0"}
+    return {"status": "ok", "version": "2.1.0"}
 
 
 # ── Serve the frontend (must be LAST so API routes take priority) ─────────────

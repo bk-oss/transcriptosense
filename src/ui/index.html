@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="TranscriptoSense — AI-powered multilingual audio transcription supporting French, Arabic, and Tunisian Dialect." />
+  <meta name="theme-color" content="#0a0a0f" />
   <title>TranscriptoSense — AI Audio Transcription</title>
   <link rel="stylesheet" href="style.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -26,7 +27,7 @@
     <header class="header">
       <div class="logo">
         <div class="logo-icon">
-          <i class="fas fa-waveform-lines"></i>
+          <i class="fas fa-wave-square"></i>
           <div class="logo-pulse"></div>
         </div>
         <span class="logo-text">TranscriptoSense</span>
@@ -54,15 +55,15 @@
       <section class="hero">
         <div class="hero-tag">
           <span class="dot"></span>
-          Whisper Large v3 · Fine-tuned for Tunisian Dialect
+          Deepgram Nova-3 + Whisper · Smart Routing
         </div>
         <h1 class="hero-title">
           Turn <span class="gradient-text">Audio</span> into
           <span class="gradient-text">Intelligence</span>
         </h1>
         <p class="hero-subtitle">
-          Upload or record audio in French, Arabic, or Tunisian Darija.<br />
-          Get an instant transcript powered by state-of-the-art AI.
+          Upload or record audio in any language.<br />
+          Get an instant transcript with speaker diarization & translation.
         </p>
 
         <!-- Live stats strip -->
@@ -73,11 +74,11 @@
           </div>
           <div class="stat-pill">
             <i class="fas fa-globe"></i>
-            FR · AR · TN Darija
+            100+ Languages
           </div>
           <div class="stat-pill">
             <i class="fas fa-robot"></i>
-            whisper-large-v3
+            Smart AI Routing
           </div>
         </div>
       </section>
@@ -101,7 +102,7 @@
             <div class="drop-icon">
               <i class="fas fa-cloud-upload-alt"></i>
             </div>
-            <p class="drop-title">Drag &amp; drop your audio file here</p>
+            <p class="drop-title">Drag & drop your audio file here</p>
             <p class="drop-sub">or click to browse</p>
             <p class="drop-formats">WAV · MP3 · M4A · FLAC · OGG</p>
             <input type="file" id="audioFile" accept=".wav,.mp3,.m4a,.flac,.ogg" hidden />
@@ -226,6 +227,10 @@
               <i class="fas fa-file-audio"></i>
               <span id="fileResult"></span>
             </span>
+            <span class="meta-badge meta-badge-model" id="badgeModel">
+              <i class="fas fa-robot"></i>
+              <span id="modelResult"></span>
+            </span>
           </div>
         </div>
 
@@ -266,11 +271,47 @@
               <div class="stat-card-lbl">File Size</div>
             </div>
           </div>
+          <div class="stat-card">
+            <div class="stat-card-icon"><i class="fas fa-users"></i></div>
+            <div class="stat-card-body">
+              <div class="stat-card-val" id="scSpeakers">—</div>
+              <div class="stat-card-lbl">Speakers</div>
+            </div>
+          </div>
         </div>
 
         <div class="result-body">
           <textarea id="transcriptionText" class="transcription-area" readonly
             placeholder="Your transcription will appear here..."></textarea>
+        </div>
+
+        <!-- Translation panel -->
+        <div class="translation-panel" id="translationPanel">
+          <div class="translation-header">
+            <div class="translation-title">
+              <i class="fas fa-language"></i>
+              Translate Transcription
+            </div>
+            <div class="translation-controls">
+              <select id="targetLang" class="lang-dropdown" aria-label="Target language">
+                <option value="">Select language…</option>
+              </select>
+              <button class="translate-btn" id="btnTranslate" onclick="translateText()">
+                <i class="fas fa-exchange-alt"></i>
+                <span id="translateLabel">Translate</span>
+              </button>
+            </div>
+          </div>
+          <div class="translated-result hidden" id="translatedResult">
+            <div class="translated-header">
+              <span class="translated-badge" id="translatedBadge"></span>
+              <button class="action-btn" onclick="copyTranslation()" title="Copy translation">
+                <i class="fas fa-copy"></i> Copy
+              </button>
+            </div>
+            <textarea id="translatedText" class="transcription-area translated-area" readonly
+              placeholder="Translation will appear here..."></textarea>
+          </div>
         </div>
 
         <!-- Export actions -->
@@ -357,7 +398,7 @@
     </div><!-- /pageHistory -->
 
     <footer class="footer">
-      TranscriptoSense &copy; 2026 &mdash; Powered by OpenAI Whisper Large v3 &middot; Fine-tuned for Tunisian Dialect Research
+      TranscriptoSense &copy; 2026 &mdash; Smart AI Routing: Whisper (CPU) &amp; Deepgram Nova-3 &middot; 100+ Languages
     </footer>
 
   </div><!-- /app -->

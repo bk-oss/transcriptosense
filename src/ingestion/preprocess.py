@@ -20,8 +20,8 @@ import soundfile as sf
 # Priority:
 # 1) --ffmpeg argument
 # 2) FFMPEG_PATH env var
-# 3) local constant below (edit if needed)
-DEFAULT_FFMPEG_PATH = r"C:\Users\mbaklouti1\Downloads\ffmpeg-8.1.2-essentials_build\ffmpeg-8.1.2-essentials_build\bin\ffmpeg.exe"
+# 3) system PATH (uses 'ffmpeg' directly)
+DEFAULT_FFMPEG_PATH = None  # Will use system PATH or require explicit --ffmpeg argument
 
 
 @dataclass
@@ -37,12 +37,17 @@ def resolve_ffmpeg_path(cli_ffmpeg: Optional[str] = None) -> str:
     if cli_ffmpeg:
         ffmpeg = cli_ffmpeg
     else:
-        ffmpeg = os.getenv("FFMPEG_PATH", DEFAULT_FFMPEG_PATH)
+        ffmpeg = os.getenv("FFMPEG_PATH", DEFAULT_FFMPEG_PATH or "ffmpeg")
 
+    # If just "ffmpeg", assume it's in system PATH
+    if ffmpeg == "ffmpeg":
+        return ffmpeg
+    
     ffmpeg_path = Path(ffmpeg)
     if not ffmpeg_path.exists():
         raise FileNotFoundError(
             f"ffmpeg not found at: {ffmpeg_path}\n"
+            f"Ensure ffmpeg is installed and available in system PATH, or\n"
             f"Set a valid path with:\n"
             f'  --ffmpeg "C:\\path\\to\\ffmpeg.exe"\n'
             f"or env var:\n"

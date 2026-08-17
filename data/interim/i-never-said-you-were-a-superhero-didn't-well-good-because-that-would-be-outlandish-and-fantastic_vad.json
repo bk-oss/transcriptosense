@@ -1,0 +1,27 @@
+{
+  "source": "C:\\Users\\mbaklouti1\\Downloads\\i-never-said-you-were-a-superhero-didn't-well-good-because-that-would-be-outlandish-and-fantastic.wav",
+  "wav_16k_mono": "C:\\Users\\mbaklouti1\\Downloads\\transcriptosense-main (2)\\transcriptosense-main\\data\\interim\\i-never-said-you-were-a-superhero-didn't-well-good-because-that-would-be-outlandish-and-fantastic_16k_mono.wav",
+  "device": "cpu",
+  "ffmpeg": "ffmpeg",
+  "vad": {
+    "sampling_rate": 16000,
+    "merge_gap_sec": 0.2,
+    "min_seg_sec": 0.15,
+    "num_segments": 3,
+    "total_speech_sec": 7.252
+  },
+  "speech_segments": [
+    {
+      "start": 0.002,
+      "end": 2.878
+    },
+    {
+      "start": 3.202,
+      "end": 6.846
+    },
+    {
+      "start": 7.842,
+      "end": 8.574
+    }
+  ]
+}

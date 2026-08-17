@@ -1,0 +1,51 @@
+# ============================================================
+# TranscriptoSense — BRONZE TIER Requirements Only
+# Use this for your first 2-3 weeks: ASR + rules + extractive summary.
+# Lighter, faster to install, fewer things that can fail on Windows
+# without a compiler / admin rights.
+#
+# Install with: pip install -r requirements_bronze.txt
+#
+# Once Bronze is working end-to-end, move to requirements.txt (full)
+# for Silver-tier additions (diarization, NER, embeddings).
+# ============================================================
+
+# ── Audio Processing ────────────────────────────────────────
+soundfile>=0.12.1           # Read/write audio files
+pydub>=0.25.1               # Audio format conversion (uses ffmpeg — see config.py)
+webrtcvad>=2.0.10           # Voice Activity Detection (pure C ext, usually installs fine)
+# sounddevice / pyaudio intentionally omitted — only needed for LIVE mic capture,
+# not required for Bronze (file-based) pipeline. Add later if you build live input.
+
+# ── ASR ──────────────────────────────────────────────────────
+faster-whisper>=1.0.0       # Runs Whisper efficiently, works fine on CPU with int8
+
+# ── NLP (lightweight, CPU-friendly) ─────────────────────────
+scikit-learn>=1.4.0         # TF-IDF keywords, cosine similarity
+numpy>=1.26.0
+langdetect>=1.0.9           # Per-segment language detection
+ftfy>=6.1.3                 # Fix garbled unicode (important for AR/Darija text)
+
+# ── Evaluation ───────────────────────────────────────────────
+jiwer>=3.0.3                # WER / CER — needed to score your ASR output
+rouge-score>=0.1.2          # ROUGE for summary evaluation
+
+# ── Summarization ────────────────────────────────────────────
+sumy>=0.11.0                # Extractive summarization, no GPU needed
+
+# ── Data & Utilities ─────────────────────────────────────────
+pandas>=2.2.0
+tqdm>=4.66.0
+python-dotenv>=1.0.0
+loguru>=0.7.2
+click>=8.1.7
+
+# ── Export ───────────────────────────────────────────────────
+python-docx>=1.1.0          # Meeting minutes as .docx
+reportlab>=4.1.0            # Meeting minutes as .pdf
+
+# ── UI (build this once the pipeline itself works) ────────────
+streamlit>=1.35.0
+
+# ── Dev / Testing ────────────────────────────────────────────
+pytest>=8.2.0

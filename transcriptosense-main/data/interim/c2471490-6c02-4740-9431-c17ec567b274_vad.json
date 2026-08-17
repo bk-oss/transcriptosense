@@ -1,0 +1,27 @@
+{
+  "source": "C:\\Users\\mbaklouti1\\Desktop\\transcriptosense--main\\transcriptosense-main\\data\\interim\\c2471490-6c02-4740-9431-c17ec567b274.mp3",
+  "wav_16k_mono": "C:\\Users\\mbaklouti1\\Desktop\\transcriptosense--main\\transcriptosense-main\\data\\interim\\c2471490-6c02-4740-9431-c17ec567b274_16k_mono.wav",
+  "device": "cpu",
+  "ffmpeg": "ffmpeg",
+  "vad": {
+    "sampling_rate": 16000,
+    "merge_gap_sec": 0.2,
+    "min_seg_sec": 0.15,
+    "num_segments": 3,
+    "total_speech_sec": 7.7
+  },
+  "speech_segments": [
+    {
+      "start": 0.098,
+      "end": 0.83
+    },
+    {
+      "start": 1.794,
+      "end": 4.03
+    },
+    {
+      "start": 5.186,
+      "end": 9.918
+    }
+  ]
+}
